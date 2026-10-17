@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ОКОПФ — онлайн-справочник организационно-правовых форм</title>
-<meta name="description" content="Быстрый поиск по ОКОПФ: код, наименование и аббревиатура. ООО, АО, ПАО, НАО, ИП, КФХ, АНО, СРО, ФГБУ, ФГУП, МУП и другие организационно-правовые формы с деревом классификатора, родителями и хлебными крошками. Источник — Росстат.">
+<meta name="description" content="Быстрый поиск по ОКОПФ: код, наименование и аббревиатура. ООО, АО, ПАО, НАО, ИП, КФХ, АНО, СРО, ФГБУ, ФГУП, МУП и другие организационно-правовые формы с деревом классификатора, родителями и путём от раздела к форме. Источник — Росстат.">
 <meta name="theme-color" content="#e8f0f7">
 <link rel="icon" type="image/svg+xml" href="https://prog815.github.io/common-menu/favicon.svg?v=1.0.0">
 <style>
@@ -160,14 +160,14 @@
   .alias-chip:hover{background:var(--accent-weak);border-color:var(--accent)}
   .rel-row{margin-top:8px;font-size:13.5px;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
   .rel-row .rel-lbl{color:var(--muted)}
-  .crumbs{margin-top:6px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
-  .crumb{
+  .path{margin-top:6px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .path-item{
     font-family:var(--mono);font-size:12.5px;background:var(--accent-weak);color:var(--accent-text);
     border:1px solid transparent;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;
   }
-  .crumb:hover{border-color:var(--accent)}
-  .crumb.cur{background:transparent;color:var(--text);font-weight:700;cursor:default;border-color:transparent}
-  .crumb-sep{opacity:.5}
+  .path-item:hover{border-color:var(--accent)}
+  .path-item.cur{background:transparent;color:var(--text);font-weight:700;cursor:default;border-color:transparent}
+  .path-sep{opacity:.5}
   .child-list{margin-top:8px;font-size:13.5px}
   .child-list .cl-lbl{color:var(--muted)}
   .child-list ul{list-style:none;margin:5px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
@@ -270,12 +270,12 @@
   <p>Общероссийский классификатор организационно-правовых форм.
      Поиск по <b>коду</b>, <b>наименованию</b> и <b>аббревиатуре</b>: ООО, АО, ПАО, НАО, ИП, КФХ,
      АНО, СРО, ФГБУ, ФГУП, МУП и другим формам. Внутри — <b>дерево классификатора</b>,
-     родительские связи и хлебные крошки.</p>
+     родительские связи и путь от корневых разделов к конкретной форме.</p>
 
   <div class="notice">
     <b>ОКОПФ — это организационно-правовая форма</b> («в какой форме организована организация»).
     Не путать с <a href="https://prog815.github.io/okogu/" rel="noopener">ОКОГУ</a> (конкретный орган),
-    <a href="https://prog815.github.io/okved2/" rel="noopener">ОКВЭД2</a> (виды деятельности) и ИНН/ОГРН (конкретная firma в реестре).
+    <a href="https://prog815.github.io/okved2/" rel="noopener">ОКВЭД2</a> (виды деятельности) и ИНН/ОГРН (конкретная фирма в реестре).
   </div>
 
   <div class="chips" id="chips" aria-label="Популярные запросы">
@@ -331,8 +331,10 @@
     <div class="links">
       <span class="cap">Источник:</span>
       <a href="https://rosstat.gov.ru/opendata/7708234640-okopf" rel="noopener" target="_blank">Росстат (ОКОПФ)</a>
-      <!-- TODO: после сверки подставить verified id документов КонсультантПлюс / Гарант по ОКОПФ -->
-      <a href="https://github.com/prog815/okopf" rel="noopener" target="_blank">О справочнике (GitHub)</a>
+      <a href="https://www.consultant.ru/document/cons_doc_LAW_139192/" rel="noopener" target="_blank">КонсультантПлюс</a>
+      <a href="https://internet.garant.ru/#/document/70284934" rel="noopener" target="_blank">Гарант</a>
+      <a href="https://docs.cntd.ru/document/1200096794" rel="noopener" target="_blank">Кодекс</a>
+      <a href="https://github.com/prog815/okopf" rel="noopener" target="_blank">О справочнике</a>
     </div>
     <p class="disc" id="footDisc"></p>
   </div>
@@ -531,7 +533,7 @@
       if(BY_CODE[rootCode]) ROOT_NAME[ROOTS[n]] = BY_CODE[rootCode].name;
     }
 
-    // пути от корня (лениво не нужно — 124 записи, считаем сразу)
+    // путь от корня (124 записи — считаем сразу, ленивость не нужна)
     for(var p=0;p<RECORDS.length;p++){
       RECORDS[p].path = buildPath(RECORDS[p].code);
     }
@@ -874,7 +876,7 @@
       var pr = BY_CODE[r.parent];
       var rr = document.createElement("div"); rr.className="rel-row";
       var rl = document.createElement("span"); rl.className="rel-lbl"; rl.textContent="Родитель:";
-      var pc = document.createElement("button"); pc.type="button"; pc.className="crumb";
+      var pc = document.createElement("button"); pc.type="button"; pc.className="path-item";
       pc.innerHTML = hlCode(pr.fmt, "");
       pc.title = "Открыть: "+pr.fmt+" "+pr.name;
       pc.dataset.act="open-code"; pc.dataset.val=pr.code;
@@ -887,26 +889,26 @@
       card.appendChild(rr2);
     }
 
-    // хлебные крошки (путь от корня)
+    // путь от корня
     if(r.path && r.path.length>1){
-      var cr = document.createElement("div"); cr.className="crumbs";
+      var pathRow = document.createElement("div"); pathRow.className="path";
       for(var i=0;i<r.path.length;i++){
         var ccode = r.path[i];
         var crec = BY_CODE[ccode];
         if(!crec) continue;
         var isCur = (i===r.path.length-1);
         var b = document.createElement("button");
-        b.type="button"; b.className="crumb"+(isCur?" cur":"");
+        b.type="button"; b.className="path-item"+(isCur?" cur":"");
         b.textContent = crec.fmt;
         b.title = crec.fmt+" "+crec.name;
         if(!isCur){ b.dataset.act="open-code"; b.dataset.val=crec.code; }
-        cr.appendChild(b);
+        pathRow.appendChild(b);
         if(i<r.path.length-1){
-          var sep=document.createElement("span"); sep.className="crumb-sep"; sep.textContent="→";
-          cr.appendChild(sep);
+          var sep=document.createElement("span"); sep.className="path-sep"; sep.textContent="→";
+          pathRow.appendChild(sep);
         }
       }
-      card.appendChild(cr);
+      card.appendChild(pathRow);
     }
 
     // дети / примечание о листе
