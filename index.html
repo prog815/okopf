@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ОКОПФ — онлайн-справочник организационно-правовых форм</title>
+<meta name="description" content="Быстрый поиск по ОКОПФ: код, наименование и аббревиатура. ООО, АО, ПАО, НАО, ИП, КФХ, АНО, СРО, ФГБУ, ФГУП, МУП и другие организационно-правовые формы с деревом классификатора, родителями и хлебными крошками. Источник — Росстат.">
+<meta name="theme-color" content="#e8f0f7">
+<link rel="icon" type="image/svg+xml" href="https://prog815.github.io/common-menu/favicon.svg?v=1.0.0">
+<style>
+  :root{
+    --bg:#eef3ee; --panel:#ffffff; --text:#16261c; --muted:#5c6b60;
+    --line:#d7e2d8; --line-strong:#c2d2c5;
+    --accent:#2e7d4f; --accent-weak:#e3f1e7; --accent-text:#1d5e39;
+    --mark:#fff3a3; --danger:#b42318; --shadow:0 1px 2px rgba(20,40,25,.06),0 6px 18px rgba(20,40,25,.06);
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --radius:12px;
+    /* уровни ОКОПФ */
+    --l1:#7b6fa6; --l1-bg:#ece8f5; --l1-fg:#4f4382;
+    --l2:#2f6fb3; --l2-bg:#e3eefa; --l2-fg:#1f4f86;
+    --l3:#2a9d8f; --l3-bg:#e0f2f0; --l3-fg:#1c6b60;
+    --l4:#4e9450; --l4-bg:#e3f1e7; --l4-fg:#1d5e39;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.45;
+    -webkit-text-size-adjust:100%;
+  }
+  a{color:var(--accent-text)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+
+  /* header */
+  .hero{padding:18px 0 6px}
+  .hero h1{margin:0 0 4px;font-size:30px;letter-spacing:.2px}
+  .hero p{margin:0;color:var(--muted);font-size:15px;max-width:920px}
+  .hero p b{color:var(--text);font-weight:600}
+  .notice{
+    margin:12px 0 2px;padding:10px 14px;border:1px solid var(--line-strong);
+    border-left:5px solid var(--l2);border-radius:10px;background:var(--panel);
+    color:var(--text);font-size:13.5px;box-shadow:var(--shadow);
+  }
+  .notice b{font-weight:600}
+  .notice a{white-space:nowrap}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 4px}
+  .chips .lbl{color:var(--muted);font-size:13px;margin-right:2px}
+  .chip{
+    border:1px solid var(--line-strong);background:var(--panel);color:var(--accent-text);
+    border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font:inherit;
+    transition:background .12s,border-color .12s,color .12s;
+  }
+  .chip:hover{background:var(--accent-weak);border-color:var(--accent)}
+
+  /* tabs */
+  .tabs{display:flex;gap:8px;margin:14px 0 0;flex-wrap:wrap}
+  .tab{
+    border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);
+    border-radius:10px 10px 0 0;padding:8px 16px;font:inherit;font-size:14px;cursor:pointer;
+    border-bottom:none;
+  }
+  .tab[aria-selected="true"]{color:var(--accent-text);background:var(--accent-weak);font-weight:600}
+  .tab:hover{color:var(--accent-text)}
+
+  /* sticky search panel */
+  .panel{
+    position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(1.1) blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 0;margin-top:0;
+  }
+  .panel .wrap{display:flex;flex-direction:column;gap:10px}
+  .row1{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .searchbox{position:relative;flex:1 1 320px;min-width:220px}
+  #q{
+    width:100%;padding:11px 38px 11px 13px;border:1px solid var(--line-strong);
+    border-radius:10px;font-size:15px;background:var(--panel);color:var(--text);
+  }
+  #q:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  #q::-webkit-search-cancel-button{display:none;-webkit-appearance:none}
+  .clear{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    border:none;background:transparent;color:var(--muted);font-size:18px;line-height:1;
+    cursor:pointer;padding:4px 6px;border-radius:8px;display:none;
+  }
+  .clear:hover{background:var(--accent-weak);color:var(--accent-text)}
+  .searchbox.has-val .clear{display:block}
+  select#section, label.tgl, .lvlgrp{
+    padding:9px 12px;border:1px solid var(--line-strong);border-radius:10px;
+    background:var(--panel);font:inherit;font-size:14px;color:var(--text);cursor:pointer;
+  }
+  select#section:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  label.tgl{display:inline-flex;gap:8px;align-items:center;white-space:nowrap;user-select:none}
+  label.tgl input{accent-color:var(--accent);width:15px;height:15px}
+  .lvlgrp{display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap;cursor:default}
+  .lvlgrp .cap{color:var(--muted);font-size:13px}
+  .lvlgrp label{display:inline-flex;gap:5px;align-items:center;cursor:pointer;user-select:none;
+    border-radius:8px;padding:2px 6px}
+  .lvlgrp label:hover{background:var(--accent-weak)}
+  .lvlgrp input{accent-color:var(--lvl,var(--accent));width:15px;height:15px}
+  .lvlgrp .dot{width:9px;height:9px;border-radius:50%;background:var(--lvl,var(--accent));display:inline-block}
+  .panel.tree-mode .row1 .searchbox,
+  .panel.tree-mode .row1 select#section,
+  .panel.tree-mode .row1 label.tgl,
+  .panel.tree-mode .row1 .lvlgrp{opacity:.45;pointer-events:none}
+  .tree-hint{display:none;color:var(--muted);font-size:13px}
+  .panel.tree-mode .tree-hint{display:block}
+
+  /* status line */
+  .statusline{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;
+    color:var(--muted);font-size:13px;padding:2px 2px 0}
+  .statusline .found b{color:var(--text)}
+  .statusline .date{white-space:nowrap;text-align:right}
+
+  /* results */
+  main{padding:14px 0 30px}
+  #state{padding:30px 4px;color:var(--muted);text-align:center}
+  #state.error{color:var(--danger)}
+  #state .retry{margin-top:10px;display:inline-block;padding:9px 14px;border:1px solid var(--line-strong);
+    border-radius:10px;background:var(--panel);color:var(--accent-text);cursor:pointer;font:inherit}
+  #list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  #treeView{display:none}
+  .empty{padding:26px 4px;color:var(--muted);text-align:center}
+
+  /* card */
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--lvl,var(--accent));
+    border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);
+  }
+  .card-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .code{
+    font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.3px;
+    background:var(--lvl-bg,var(--accent-weak));color:var(--lvl-fg,var(--accent-text));
+    border:1px solid transparent;border-radius:8px;padding:4px 9px;cursor:pointer;white-space:nowrap;
+  }
+  .code:hover{border-color:var(--lvl,var(--accent))}
+  .copy-full{
+    margin-left:auto;border:1px dashed var(--line-strong);background:#fbfcfb;color:var(--muted);
+    border-radius:8px;padding:4px 9px;cursor:pointer;font:inherit;font-size:13px;white-space:nowrap;
+  }
+  .copy-full:hover{border-color:var(--accent);color:var(--accent-text);background:var(--accent-weak)}
+  .badge{
+    font:inherit;font-size:12px;border-radius:999px;padding:4px 10px;cursor:pointer;
+    border:1px solid transparent;white-space:nowrap;
+  }
+  .badge-level{background:var(--lvl-bg);color:var(--lvl-fg);border-color:var(--lvl)}
+  .badge-level:hover{filter:brightness(.97)}
+  .badge-leaf{background:var(--l4-bg);color:var(--l4-fg);border-color:var(--l4)}
+  .badge-branch{background:#f1f3f5;color:#3a4750;border-color:#e1e6ea}
+  .badge-root{background:#f1f3f5;color:#3a4750;border-color:#e1e6ea}
+  .badge-root:hover{background:#e7ebef}
+  .name{margin-top:9px;font-size:15px}
+  .alias-row{margin-top:7px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .alias-row .al-lbl{color:var(--text);font-weight:600}
+  .alias-chip{
+    border:1px solid var(--line-strong);background:#fbfcfb;color:var(--accent-text);
+    border-radius:999px;padding:2px 9px;font-size:12.5px;cursor:pointer;font:inherit;
+  }
+  .alias-chip:hover{background:var(--accent-weak);border-color:var(--accent)}
+  .rel-row{margin-top:8px;font-size:13.5px;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+  .rel-row .rel-lbl{color:var(--muted)}
+  .crumbs{margin-top:6px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .crumb{
+    font-family:var(--mono);font-size:12.5px;background:var(--accent-weak);color:var(--accent-text);
+    border:1px solid transparent;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;
+  }
+  .crumb:hover{border-color:var(--accent)}
+  .crumb.cur{background:transparent;color:var(--text);font-weight:700;cursor:default;border-color:transparent}
+  .crumb-sep{opacity:.5}
+  .child-list{margin-top:8px;font-size:13.5px}
+  .child-list .cl-lbl{color:var(--muted)}
+  .child-list ul{list-style:none;margin:5px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .child-item{display:flex;gap:8px;align-items:baseline}
+  .child-item .ci-code{
+    font-family:var(--mono);font-size:12.5px;background:var(--accent-weak);color:var(--accent-text);
+    border-radius:6px;padding:1px 7px;cursor:pointer;border:1px solid transparent;white-space:nowrap;
+  }
+  .child-item .ci-code:hover{border-color:var(--accent)}
+  .leaf-note{margin-top:8px;font-size:13px;color:var(--l4-fg)}
+  mark{background:var(--mark);border-radius:3px;padding:0 1px;color:inherit}
+
+  /* tree */
+  .tree{list-style:none;margin:0;padding:0}
+  .tree ul{list-style:none;margin:2px 0 2px 10px;padding-left:12px;border-left:1px solid var(--line)}
+  .tree li{margin:2px 0}
+  .tree details>summary{
+    list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;gap:7px;align-items:center;
+    padding:4px 6px;border-radius:8px;
+  }
+  .tree details>summary::-webkit-details-marker{display:none}
+  .tree details>summary:hover{background:var(--accent-weak)}
+  .tree .tw{width:14px;text-align:center;color:var(--muted);font-size:11px;flex:0 0 auto}
+  .tree details[open]>summary .tw::after{content:"▾"}
+  .tree details:not([open])>summary .tw::after{content:"▸"}
+  .tree .leaf-dot{width:14px;flex:0 0 auto;text-align:center;color:var(--l4)}
+  .tcode{
+    font-family:var(--mono);font-weight:700;font-size:13.5px;
+    background:var(--lvl-bg,var(--accent-weak));color:var(--lvl-fg,var(--accent-text));
+    border-radius:6px;padding:2px 7px;cursor:pointer;border:1px solid transparent;white-space:nowrap;
+  }
+  .tcode:hover{border-color:var(--lvl,var(--accent))}
+  .tname{font-size:13.5px;color:var(--text)}
+  .tbadge{font:inherit;font-size:11px;border-radius:999px;padding:1px 7px;border:1px solid var(--line-strong);
+    background:#f1f3f5;color:#3a4750;white-space:nowrap}
+  .tbadge.leaf{background:var(--l4-bg);color:var(--l4-fg);border-color:var(--l4)}
+
+  .more{display:flex;justify-content:center;margin:16px 0 4px}
+  .more button{
+    padding:11px 18px;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel);
+    color:var(--accent-text);font:inherit;font-size:14px;cursor:pointer;box-shadow:var(--shadow);
+  }
+  .more button:hover{border-color:var(--accent);background:var(--accent-weak)}
+  .more button:disabled{opacity:.5;cursor:default}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);background:var(--panel)}
+  footer .wrap{padding:18px 16px 30px;color:var(--muted);font-size:14px}
+  footer h4{margin:0 0 8px;color:var(--text);font-size:15px}
+  footer .lead{margin:0 0 12px;color:var(--text)}
+  footer .lead b{font-weight:600}
+  footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:0 0 12px}
+  footer .links .cap{color:var(--muted)}
+  footer .links a{white-space:nowrap}
+  footer .disc{margin:0;font-size:13px;color:#7a877d}
+
+  /* floating buttons + toast */
+  .fab{position:fixed;right:16px;display:flex;flex-direction:column;gap:8px;z-index:40}
+  .fab.up{bottom:74px}.fab.down{bottom:16px}
+  .fab button{
+    width:42px;height:42px;border-radius:50%;border:1px solid var(--line-strong);background:var(--panel);
+    color:var(--accent-text);font-size:18px;cursor:pointer;box-shadow:var(--shadow);display:none;
+  }
+  .fab button:hover{background:var(--accent-weak);border-color:var(--accent)}
+  .toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);
+    background:#16261c;color:#eafff0;padding:10px 16px;border-radius:10px;font-size:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;
+    max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:720px){
+    .hero h1{font-size:25px}
+    .row1{flex-direction:column;align-items:stretch}
+    .row1>*{width:100%}
+    .searchbox{flex:auto}
+    select#section,label.tgl,.lvlgrp{justify-content:space-between}
+    .statusline{flex-direction:column;gap:2px}
+    .statusline .date{text-align:left}
+    .copy-full{margin-left:0}
+  }
+</style>
+</head>
+<body>
+<!--
+  ВНИМАНИЕ по версии меню:
+  Целевая версия каталога после добавления ОКОПФ — ?v=2.4.0.
+  Порядок публикации:
+    1) сначала обновить prog815/common-menu/menu.js (добавить пункт ОКОПФ в projectsCatalog) и закоммитить;
+    2) убедиться, что https://prog815.github.io/common-menu/menu.js?v=2.4.0 отдаёт 200;
+    3) затем публиковать этот index.html с ?v=2.4.0 и batch-поднять ?v= во всех справочниках.
+  Пока 2.4.0 не залит — временно держите ?v=2.3.0 (меню загрузится без пункта ОКОПФ, страница работает).
+-->
+<script src="https://prog815.github.io/common-menu/menu.js?v=2.4.0"></script>
+<common-projects-menu></common-projects-menu>
+
+<div class="wrap hero">
+  <h1>ОКОПФ</h1>
+  <p>Общероссийский классификатор организационно-правовых форм.
+     Поиск по <b>коду</b>, <b>наименованию</b> и <b>аббревиатуре</b>: ООО, АО, ПАО, НАО, ИП, КФХ,
+     АНО, СРО, ФГБУ, ФГУП, МУП и другим формам. Внутри — <b>дерево классификатора</b>,
+     родительские связи и хлебные крошки.</p>
+
+  <div class="notice">
+    <b>ОКОПФ — это организационно-правовая форма</b> («в какой форме организована организация»).
+    Не путать с <a href="https://prog815.github.io/okogu/" rel="noopener">ОКОГУ</a> (конкретный орган),
+    <a href="https://prog815.github.io/okved2/" rel="noopener">ОКВЭД2</a> (виды деятельности) и ИНН/ОГРН (конкретная firma в реестре).
+  </div>
+
+  <div class="chips" id="chips" aria-label="Популярные запросы">
+    <span class="lbl">Популярные:</span>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Режим отображения">
+    <button class="tab" id="tabList" role="tab" aria-selected="true"  aria-controls="listView"  type="button">Список / поиск</button>
+    <button class="tab" id="tabTree" role="tab" aria-selected="false" aria-controls="treeView" type="button">Дерево классификатора</button>
+  </div>
+</div>
+
+<div class="panel" id="panel">
+  <div class="wrap">
+    <div class="row1">
+      <div class="searchbox" id="searchbox">
+        <input id="q" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Код (12300 или 1 23 00) или слово: ООО, ИП, саморегулируемые…"
+               aria-label="Поиск по ОКОПФ">
+        <button class="clear" id="clear" type="button" title="Очистить запрос" aria-label="Очистить запрос">×</button>
+      </div>
+      <div class="lvlgrp" id="lvlgrp" aria-label="Фильтр по уровню">
+        <span class="cap">Уровень:</span>
+      </div>
+      <label class="tgl" id="leafWrap" title="Показывать только конечные организационно-правовые формы (без дочерних)">
+        <input type="checkbox" id="onlyLeaf"> Только формы
+      </label>
+      <select id="section" aria-label="Фильтр по разделу"></select>
+      <span class="tree-hint">Поиск и фильтры работают в режиме «Список». В «Дереве» — обзор структуры.</span>
+    </div>
+    <div class="statusline">
+      <div class="found" id="found">Загрузка…</div>
+      <div class="date" id="dateLine"></div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div id="listView">
+    <div id="state">Загрузка данных справочника…</div>
+    <ul id="list" hidden></ul>
+    <div class="more" id="moreWrap" hidden>
+      <button id="more" type="button">Показать ещё</button>
+    </div>
+  </div>
+  <div id="treeView" aria-labelledby="tabTree"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h4>О справочнике</h4>
+    <p class="lead" id="footLead"></p>
+    <div class="links">
+      <span class="cap">Источник:</span>
+      <a href="https://rosstat.gov.ru/opendata/7708234640-okopf" rel="noopener" target="_blank">Росстат (ОКОПФ)</a>
+      <!-- TODO: после сверки подставить verified id документов КонсультантПлюс / Гарант по ОКОПФ -->
+      <a href="https://github.com/prog815/okopf" rel="noopener" target="_blank">О справочнике (GitHub)</a>
+    </div>
+    <p class="disc" id="footDisc"></p>
+  </div>
+</footer>
+
+<div class="fab up"><button id="toTop" type="button" title="Наверх" aria-label="Наверх">↑</button></div>
+<div class="fab down"><button id="toBottom" type="button" title="Вниз" aria-label="Вниз">↓</button></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- конфигурация ----------
+  var BASE = location.href.replace(/[^/]*$/,"");
+  var DATA_GZ  = BASE + "okopf.json.gz";
+  var DATA_JSON= BASE + "okopf.json";
+  var META_GZ  = BASE + "okopf_meta.json.gz";
+  var META_JSON= BASE + "okopf_meta.json";
+
+  var PAGE_SIZE = 20;
+  var DEBOUNCE_MS = 180;
+  var SCROLL_THRESHOLD = 300;
+  var EMPTY_PQ = {rawTerms:[], digits:"", tokens:[], full:""};
+
+  // формат веб-записи: [code, name, codeFormatted, parent, level, isLeaf, root, aliases]
+  var F_CODE=0, F_NAME=1, F_FMT=2, F_PARENT=3, F_LEVEL=4, F_LEAF=5, F_ROOT=6, F_ALIAS=7;
+
+  var LVL_STYLE = {
+    "1":{c:"var(--l1)", bg:"var(--l1-bg)", fg:"var(--l1-fg)", label:"Раздел"},
+    "2":{c:"var(--l2)", bg:"var(--l2-bg)", fg:"var(--l2-fg)", label:"Группа"},
+    "3":{c:"var(--l3)", bg:"var(--l3-bg)", fg:"var(--l3-fg)", label:"Подгруппа / форма"},
+    "4":{c:"var(--l4)", bg:"var(--l4-bg)", fg:"var(--l4-fg)", label:"Уточнённая форма"}
+  };
+  var LEVELS = ["1","2","3","4"];
+
+  var ROOT_SHORT = {
+    "1":"Коммерч. корпоративные",
+    "2":"Некоммерч. корпоративные",
+    "3":"Без права юрлица",
+    "4":"Международные",
+    "5":"Деятельность граждан",
+    "6":"Коммерч. унитарные",
+    "7":"Некоммерч. унитарные"
+  };
+  var ROOTS = ["1","2","3","4","5","6","7"];
+
+  var POPULAR = ["ООО","АО","ПАО","НАО","ИП","КФХ","АНО","СРО","ФГБУ","ФГУП","МУП","МБУ","колхоз","товарищество"];
+
+  // ---------- состояние ----------
+  var RECORDS = [];          // плоский список с индексами
+  var BY_CODE = {};          // code -> record
+  var TREE = [];             // корневые узлы для режима «Дерево»
+  var ROOT_NAME = {};        // root("1".."7") -> полное имя корня
+  var META = null;
+  var levelCounts = {"1":0,"2":0,"3":0,"4":0};
+  var rootCounts = {"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0};
+  var leafCount = 0, branchCount = 0, aliasCount = 0;
+  var filtered = [];
+  var shown = PAGE_SIZE;
+  var view = "list";         // "list" | "tree"
+
+  // ---------- dom ----------
+  var $ = function(id){return document.getElementById(id);};
+  var elState=$("state"), elList=$("list"), elMoreWrap=$("moreWrap"), elMore=$("more");
+  var elQ=$("q"), elClear=$("clear"), elBox=$("searchbox"), elSection=$("section"),
+      elOnly=$("onlyLeaf"), elFound=$("found"), elDate=$("dateLine"),
+      elChips=$("chips"), elFootLead=$("footLead"), elFootDisc=$("footDisc"), elToast=$("toast"),
+      elTop=$("toTop"), elBottom=$("toBottom"), elPanel=$("panel"),
+      elListView=$("listView"), elTreeView=$("treeView"),
+      elTabList=$("tabList"), elTabTree=$("tabTree"), elLvlGrp=$("lvlgrp");
+
+  // ---------- утилиты ----------
+  function norm(s){
+    s = String(s==null?"":s).toLowerCase().replace(/ё/g,"е");
+    s = s.replace(/[^\p{L}\p{N}]+/gu," ");
+    s = s.replace(/\s+/g," ").trim();
+    return s;
+  }
+  function escHtml(s){
+    return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function escRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+  function fmtNum(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0"); }
+  function plural(n,forms){
+    var n10=n%10, n100=n%100;
+    if(n10===1 && n100!==11) return forms[0];
+    if(n10>=2 && n10<=4 && (n100<10||n100>=20)) return forms[1];
+    return forms[2];
+  }
+  function isLeafRec(r){ return r.isLeaf==="1"; }
+
+  // ---------- загрузка ----------
+  async function fetchJson(gzUrl, jsonUrl){
+    try{
+      if (typeof DecompressionStream === "function"){
+        var r = await fetch(gzUrl,{cache:"no-store"});
+        if (r.ok){
+          var ds = new DecompressionStream("gzip");
+          var decompressed = r.body.pipeThrough(ds);
+          var text = await new Response(decompressed).text();
+          return JSON.parse(text);
+        }
+      }
+    }catch(e){ /* fallback */ }
+    var r2 = await fetch(jsonUrl,{cache:"no-store"});
+    if(!r2.ok) throw new Error("HTTP "+r2.status+" для "+jsonUrl);
+    return await r2.json();
+  }
+
+  async function loadAll(){
+    elState.hidden=false; elState.className=""; elState.textContent="Загрузка данных справочника…";
+    elList.hidden=true; elList.innerHTML=""; elMoreWrap.hidden=true; elMore.textContent="";
+    elFound.textContent="Загрузка…"; elDate.textContent="";
+
+    var data, meta=null;
+    try{
+      data = await fetchJson(DATA_GZ, DATA_JSON);
+    }catch(err){
+      elState.className="error";
+      elState.innerHTML = "Не удалось загрузить данные справочника.<br>"+
+        "<small>"+escHtml(err&&err.message||err)+"</small><br>"+
+        '<button class="retry" id="retryBtn" type="button">Повторить</button>';
+      var rb=$("retryBtn"); if(rb) rb.addEventListener("click", loadAll);
+      return;
+    }
+    try{ meta = await fetchJson(META_GZ, META_JSON); }catch(e){ meta=null; }
+
+    META = meta;
+    buildIndexes(data);
+    buildLevelFilter();
+    buildSectionSelect();
+    renderChips();
+    renderFooter();
+    renderDateLine();
+    parseUrlAndApply();
+  }
+
+  // ---------- построение индексов и дерева ----------
+  function buildIndexes(arr){
+    RECORDS = []; BY_CODE = {}; TREE = []; ROOT_NAME = {};
+    levelCounts = {"1":0,"2":0,"3":0,"4":0};
+    rootCounts = {"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7":0};
+    leafCount=0; branchCount=0; aliasCount=0;
+    if(!Array.isArray(arr)) arr=[];
+
+    var childrenMap = {};
+
+    for(var i=0;i<arr.length;i++){
+      var it = arr[i]||[];
+      var code = String(it[F_CODE]==null?"":it[F_CODE]).trim();
+      if(!code) continue;
+      var name = String(it[F_NAME]==null?"":it[F_NAME]).trim();
+      var fmt  = String(it[F_FMT]==null?"":it[F_FMT]).trim() || code;
+      var parent = String(it[F_PARENT]==null?"":it[F_PARENT]).trim();
+      var level  = String(it[F_LEVEL]==null?"":it[F_LEVEL]).trim();
+      var isLeaf = String(it[F_LEAF]==null?"":it[F_LEAF]).trim();
+      var root   = String(it[F_ROOT]==null?"":it[F_ROOT]).trim();
+      var aliasRaw = String(it[F_ALIAS]==null?"":it[F_ALIAS]).trim();
+
+      var aliasParts = aliasRaw ? aliasRaw.split("|").map(function(p){return p.trim();}).filter(Boolean) : [];
+      var nName = norm(name);
+      var nAliasParts = aliasParts.map(norm).filter(Boolean);
+      var blob = norm(code+" "+fmt+" "+name+" "+aliasParts.join(" "));
+
+      var rec = {
+        code:code, name:name, fmt:fmt, parent:parent, level:level,
+        isLeaf:isLeaf, root:root, aliasRaw:aliasRaw, aliasParts:aliasParts,
+        nName:nName, nAliasParts:nAliasParts, blob:blob, children:[]
+      };
+      RECORDS.push(rec);
+      BY_CODE[code] = rec;
+      childrenMap[code] = [];
+
+      if(levelCounts[level]!=null) levelCounts[level]++; else levelCounts[level]=1;
+      if(rootCounts[root]!=null) rootCounts[root]++; else rootCounts[root]=1;
+      if(isLeaf==="1") leafCount++; else branchCount++;
+      if(aliasParts.length) aliasCount++;
+    }
+
+    // связи родитель->дети
+    for(var j=0;j<RECORDS.length;j++){
+      var r = RECORDS[j];
+      if(r.parent && BY_CODE[r.parent]){
+        childrenMap[r.parent].push(r.code);
+      }
+    }
+    for(var k in childrenMap){ if(childrenMap.hasOwnProperty(k)) childrenMap[k].sort(); }
+    for(var m=0;m<RECORDS.length;m++){ RECORDS[m].children = childrenMap[RECORDS[m].code] || []; }
+
+    // имена корней (для title бейджа раздела)
+    for(var n=0;n<ROOTS.length;n++){
+      var rootCode = ROOTS[n]+"0000";
+      if(BY_CODE[rootCode]) ROOT_NAME[ROOTS[n]] = BY_CODE[rootCode].name;
+    }
+
+    // пути от корня (лениво не нужно — 124 записи, считаем сразу)
+    for(var p=0;p<RECORDS.length;p++){
+      RECORDS[p].path = buildPath(RECORDS[p].code);
+    }
+
+    // дерево
+    var rootsRec = RECORDS.filter(function(r){ return !r.parent; });
+    rootsRec.sort(function(a,b){ return a.code<b.code?-1:(a.code>b.code?1:0); });
+    TREE = rootsRec.map(function(r){ return makeNode(r.code); });
+
+    // натуральный порядок списка = по коду (как в тетрадке)
+    RECORDS.sort(function(a,b){ return a.code<b.code?-1:(a.code>b.code?1:0); });
+  }
+
+  function buildPath(code){
+    var out=[], cur=code, seen={};
+    while(cur && BY_CODE[cur] && !seen[cur]){
+      seen[cur]=1; out.push(cur); cur = BY_CODE[cur].parent;
+    }
+    return out.reverse();
+  }
+
+  function makeNode(code){
+    var r = BY_CODE[code];
+    return {
+      code:r.code, name:r.name, fmt:r.fmt, level:r.level, isLeaf:r.isLeaf, root:r.root,
+      children: r.children.map(makeNode)
+    };
+  }
+
+  // ---------- фильтры ----------
+  function buildLevelFilter(){
+    var frag = document.createDocumentFragment();
+    LEVELS.forEach(function(lv){
+      var st = LVL_STYLE[lv];
+      var lab = document.createElement("label");
+      lab.style.setProperty("--lvl", st.c);
+      lab.title = "Уровень "+lv+" — "+st.label+" ("+(levelCounts[lv]||0)+")";
+      var cb = document.createElement("input");
+      cb.type="checkbox"; cb.value=lv; cb.checked=true; cb.dataset.lvl=lv;
+      var dot = document.createElement("span"); dot.className="dot";
+      var txt = document.createElement("span"); txt.textContent = lv+". "+st.label;
+      lab.appendChild(cb); lab.appendChild(dot); lab.appendChild(txt);
+      cb.addEventListener("change", function(){ applyFilters(); syncUrl(); });
+      frag.appendChild(lab);
+    });
+    elLvlGrp.appendChild(frag);
+  }
+
+  function selectedLevels(){
+    var out=[];
+    var cbs = elLvlGrp.querySelectorAll("input[data-lvl]");
+    for(var i=0;i<cbs.length;i++){ if(cbs[i].checked) out.push(cbs[i].value); }
+    return out;
+  }
+  function setLevels(arr){
+    var set={}; arr.forEach(function(x){set[x]=1;});
+    var cbs = elLvlGrp.querySelectorAll("input[data-lvl]");
+    for(var i=0;i<cbs.length;i++){ cbs[i].checked = !!set[cbs[i].value]; }
+  }
+
+  function buildSectionSelect(){
+    var nums = ROOTS.slice();
+    // добавим неожиданные разделы, если появятся в новой редакции
+    Object.keys(rootCounts).forEach(function(k){ if(k && nums.indexOf(k)<0) nums.push(k); });
+    nums.sort(function(a,b){ return (parseInt(a,10)||99)-(parseInt(b,10)||99); });
+
+    var html = '<option value="">Все разделы</option>';
+    nums.forEach(function(n){
+      var cnt = rootCounts[n]||0;
+      var shortLbl = ROOT_SHORT[n] || ("Раздел "+n);
+      var full = ROOT_NAME[n] || shortLbl;
+      html += '<option value="'+escHtml(n)+'" title="'+escHtml(full)+'">'+
+              escHtml("§"+n+" — "+shortLbl+" ("+cnt+")")+'</option>';
+    });
+    elSection.innerHTML = html;
+  }
+
+  function renderChips(){
+    var frag = document.createDocumentFragment();
+    POPULAR.forEach(function(p){
+      var b=document.createElement("button");
+      b.type="button"; b.className="chip"; b.textContent=p;
+      b.title="Искать: "+p;
+      b.addEventListener("click",function(){
+        setView("list"); elQ.value=p; syncClear(); applyFilters(); syncUrl(); focusTop();
+      });
+      frag.appendChild(b);
+    });
+    elChips.appendChild(frag);
+  }
+
+  function renderDateLine(){
+    var parts=[];
+    if(META && META.source_date_display) parts.push("Дата актуальности: "+META.source_date_display);
+    if(META && META.valid_until) parts.push("действует до "+fmtRuDate(META.valid_until));
+    if(META && META.provenance) parts.push(META.provenance);
+    elDate.textContent = parts.join(" · ");
+  }
+  function fmtRuDate(iso){
+    var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||""));
+    if(!m) return iso||"";
+    return m[3]+"."+m[2]+"."+m[1];
+  }
+
+  function renderFooter(){
+    var total = RECORDS.length;
+    var lvlParts=[];
+    LEVELS.forEach(function(lv){ var c=levelCounts[lv]||0; if(c>0) lvlParts.push(fmtNum(c)+" ур."+lv); });
+    var s = "В справочнике "+fmtNum(total)+" "+plural(total,["запись","записи","записей"])+
+            " ("+lvlParts.join(", ")+"). Конечных форм — "+fmtNum(leafCount)+
+            ", групп/разделов — "+fmtNum(branchCount)+
+            ". Поисковые аббревиатуры добавлены у "+fmtNum(aliasCount)+" "+plural(aliasCount,["записи","записей","записей"])+".";
+    elFootLead.innerHTML = escHtml(s).replace(/(\d[\d\u00a0.]*)/g,"<b>$1</b>");
+
+    var d = "Справочник носит информационный характер. Для официального применения сверяйтесь с действующей редакцией ОКОПФ. "+
+            "Аббревиатуры (ООО, ИП, ПАО и т.п.) — неофициальные поисковые подсказки, их нет в CSV-источнике Росстата. "+
+            "Данные обновляются ежедневно из официального открытого набора Росстата. Иерархия построена по коду: "+
+            "родитель для abcde — первый существующий среди abc00 → ab000 → a0000.";
+    elFootDisc.textContent = d;
+  }
+
+  // ---------- поиск / фильтрация ----------
+  function prepareQuery(q){
+    var digits = String(q||"").replace(/\D/g,"");
+    var n = norm(q);
+    var tokens = n ? n.split(" ").filter(Boolean) : [];
+    var rawTerms = String(q||"").trim().split(/\s+/).filter(Boolean);
+    return {digits:digits, tokens:tokens, rawTerms:rawTerms, full:tokens.join(" ")};
+  }
+
+  function scoreRecord(r, pq){
+    var score=0, hasQuery = pq.digits || pq.tokens.length;
+
+    if(pq.digits){
+      if(r.code === pq.digits) score += 100;
+      else if(r.code.indexOf(pq.digits)===0) score += 80;
+    }
+
+    if(pq.tokens.length){
+      for(var i=0;i<pq.tokens.length;i++){
+        if(r.blob.indexOf(pq.tokens[i]) < 0) return null; // AND
+      }
+      var full = pq.full;
+      if(r.nName === full) score += 60;
+      else if(r.nName.indexOf(full)===0) score += 50;
+      else if(r.nName.indexOf(full) >= 0) score += 35;
+
+      // алиасы: берём лучший балл по всем алиасам (не суммируем)
+      var bestAlias=0;
+      for(var a=0;a<r.nAliasParts.length;a++){
+        var na=r.nAliasParts[a];
+        if(na === full){ if(75>bestAlias) bestAlias=75; }
+        else if(na.indexOf(full)===0){ if(65>bestAlias) bestAlias=65; }
+        else if(na.indexOf(full) >= 0){ if(40>bestAlias) bestAlias=40; }
+      }
+      score += bestAlias;
+
+      for(var k=0;k<pq.tokens.length;k++){
+        var t=pq.tokens[k];
+        if(r.nName.indexOf(t)>=0) score += 5;
+        for(var m=0;m<r.nAliasParts.length;m++){
+          if(r.nAliasParts[m].indexOf(t)>=0){ score += 4; break; }
+        }
+      }
+    }
+
+    if(hasQuery && score<=0) return null;
+    return score;
+  }
+
+  function applyFilters(){
+    var sect = elSection.value || "";
+    var onlyLeaf = !!elOnly.checked;
+    var lvls = {}; selectedLevels().forEach(function(l){lvls[l]=1;});
+    var allLevels = LEVELS.every(function(l){return lvls[l];});
+    var pq = prepareQuery(elQ.value);
+
+    var base = [];
+    for(var i=0;i<RECORDS.length;i++){
+      var r = RECORDS[i];
+      if(sect && r.root !== sect) continue;
+      if(onlyLeaf && !isLeafRec(r)) continue;
+      if(!allLevels && !lvls[r.level]) continue;
+      base.push(r);
+    }
+
+    var hasQuery = !!(pq.digits || pq.tokens.length);
+    if(hasQuery){
+      var scored=[];
+      for(var a=0;a<base.length;a++){
+        var s = scoreRecord(base[a], pq);
+        if(s!==null) scored.push({r:base[a], s:s});
+      }
+      scored.sort(function(x,y){
+        if(y.s!==x.s) return y.s-x.s;
+        var lx=parseInt(x.r.level,10)||99, ly=parseInt(y.r.level,10)||99;
+        if(lx!==ly) return lx-ly;
+        return x.r.code<y.r.code?-1:(x.r.code>y.r.code?1:0);
+      });
+      filtered = scored.map(function(o){return o.r;});
+    }else{
+      filtered = base;
+    }
+    filtered._pq = pq;
+
+    shown = PAGE_SIZE;
+    renderList();
+  }
+
+  // ---------- рендер списка ----------
+  function renderList(){
+    var pq = filtered._pq || EMPTY_PQ;
+    var terms = pq.rawTerms || [];
+    var digits = pq.digits || "";
+    var total = filtered.length;
+    var visible = Math.min(shown, total);
+
+    elFound.innerHTML = (total===0)
+      ? "Найдено: <b>0</b>"
+      : ("Найдено: <b>"+total+"</b> · Показано: <b>"+visible+"</b>");
+
+    if(total===0){
+      elList.hidden=true; elList.innerHTML="";
+      elState.hidden=false; elState.className="";
+      elState.innerHTML = '<div class="empty">Ничего не найдено. Попробуйте сократить запрос или снять фильтры.</div>';
+      elMore.textContent=""; elMoreWrap.hidden=true;
+      return;
+    }
+
+    elState.hidden=true; elList.hidden=false;
+    var frag = document.createDocumentFragment();
+    var slice = filtered.slice(0, shown);
+    for(var i=0;i<slice.length;i++) frag.appendChild(buildCard(slice[i], terms, digits));
+    elList.innerHTML=""; elList.appendChild(frag);
+
+    if(visible < total){
+      var next = Math.min(shown+PAGE_SIZE, total);
+      elMore.textContent = "Показать ещё +"+(next-visible)+" (показано "+visible+" из "+total+")";
+      elMore.disabled=false;
+      elMoreWrap.hidden=false;
+    }else{
+      elMore.textContent="";
+      elMoreWrap.hidden=true;
+    }
+  }
+
+  // ---------- подсветка ----------
+  function hlText(text, rawTerms){
+    var safe = escHtml(text);
+    if(!rawTerms || !rawTerms.length) return safe;
+    var re = new RegExp("("+rawTerms.map(escRe).join("|")+")","gi");
+    return safe.replace(re,"<mark>$1</mark>");
+  }
+  function hlCode(code, digits){
+    var safe = escHtml(code);
+    if(digits && code.indexOf(digits)===0){
+      return "<mark>"+escHtml(digits)+"</mark>"+escHtml(code.slice(digits.length));
+    }
+    if(digits && code.indexOf(digits)>=0){
+      return safe.replace(new RegExp("("+escRe(digits)+")"),"<mark>$1</mark>");
+    }
+    return safe;
+  }
+
+  // ---------- карточка ----------
+  function buildCard(r, terms, digits){
+    var li = document.createElement("li");
+    var card = document.createElement("article");
+    card.className="card";
+    var st = LVL_STYLE[r.level] || {c:"var(--accent)",bg:"var(--accent-weak)",fg:"var(--accent-text)",label:""};
+    card.style.setProperty("--lvl", st.c);
+    card.style.setProperty("--lvl-bg", st.bg);
+    card.style.setProperty("--lvl-fg", st.fg);
+
+    var top = document.createElement("div"); top.className="card-top";
+
+    var codeBtn = document.createElement("button");
+    codeBtn.type="button"; codeBtn.className="code";
+    codeBtn.innerHTML = hlCode(r.fmt, digits);
+    codeBtn.title = "Копировать код: "+r.fmt;
+    codeBtn.dataset.act="copy-fmt"; codeBtn.dataset.val=r.fmt;
+    top.appendChild(codeBtn);
+
+    var lvlBadge = document.createElement("button");
+    lvlBadge.type="button"; lvlBadge.className="badge badge-level";
+    lvlBadge.textContent = "Ур."+r.level+" · "+st.label;
+    lvlBadge.title = "Фильтровать: только уровень "+r.level;
+    lvlBadge.dataset.act="filter-level"; lvlBadge.dataset.val=r.level;
+    top.appendChild(lvlBadge);
+
+    var typeBadge = document.createElement("span");
+    if(isLeafRec(r)){
+      typeBadge.className="badge badge-leaf"; typeBadge.textContent="Форма";
+      typeBadge.title="Конечная организационно-правовая форма (без дочерних)";
+    }else{
+      typeBadge.className="badge badge-branch"; typeBadge.textContent="Группа";
+      typeBadge.title="Раздел/группа (имеет дочерние элементы)";
+    }
+    top.appendChild(typeBadge);
+
+    var rootBadge = document.createElement("button");
+    rootBadge.type="button"; rootBadge.className="badge badge-root";
+    rootBadge.textContent = "§"+r.root+" "+(ROOT_SHORT[r.root]||("Раздел "+r.root));
+    rootBadge.title = "Фильтровать: "+(ROOT_NAME[r.root]||("Раздел "+r.root));
+    rootBadge.dataset.act="filter-section"; rootBadge.dataset.val=r.root;
+    top.appendChild(rootBadge);
+
+    var copyFull = document.createElement("button");
+    copyFull.type="button"; copyFull.className="copy-full";
+    var fullVal = r.code+"; "+r.name;
+    copyFull.textContent = "📋 код + название";
+    copyFull.title = "Скопировать для отчётности: "+fullVal;
+    copyFull.dataset.act="copy-full"; copyFull.dataset.val=fullVal;
+    top.appendChild(copyFull);
+
+    card.appendChild(top);
+
+    var name = document.createElement("div"); name.className="name";
+    name.innerHTML = hlText(r.name, terms);
+    card.appendChild(name);
+
+    // алиасы (неофициальные поисковые подсказки)
+    if(r.aliasParts && r.aliasParts.length){
+      var ar = document.createElement("div"); ar.className="alias-row";
+      var al = document.createElement("span"); al.className="al-lbl"; al.textContent="Сокращённо (поиск):";
+      ar.appendChild(al);
+      r.aliasParts.forEach(function(ap){
+        var c=document.createElement("button");
+        c.type="button"; c.className="alias-chip";
+        c.innerHTML = hlText(ap, terms);
+        c.title = "Искать: "+ap;
+        c.dataset.act="search-alias"; c.dataset.val=ap;
+        ar.appendChild(c);
+      });
+      card.appendChild(ar);
+    }
+
+    // родитель
+    if(r.parent && BY_CODE[r.parent]){
+      var pr = BY_CODE[r.parent];
+      var rr = document.createElement("div"); rr.className="rel-row";
+      var rl = document.createElement("span"); rl.className="rel-lbl"; rl.textContent="Родитель:";
+      var pc = document.createElement("button"); pc.type="button"; pc.className="crumb";
+      pc.innerHTML = hlCode(pr.fmt, "");
+      pc.title = "Открыть: "+pr.fmt+" "+pr.name;
+      pc.dataset.act="open-code"; pc.dataset.val=pr.code;
+      var pn = document.createElement("span"); pn.textContent=" "+pr.name;
+      rr.appendChild(rl); rr.appendChild(pc); rr.appendChild(pn);
+      card.appendChild(rr);
+    }else{
+      var rr2 = document.createElement("div"); rr2.className="rel-row";
+      rr2.innerHTML = '<span class="rel-lbl">Корневой раздел классификатора</span>';
+      card.appendChild(rr2);
+    }
+
+    // хлебные крошки (путь от корня)
+    if(r.path && r.path.length>1){
+      var cr = document.createElement("div"); cr.className="crumbs";
+      for(var i=0;i<r.path.length;i++){
+        var ccode = r.path[i];
+        var crec = BY_CODE[ccode];
+        if(!crec) continue;
+        var isCur = (i===r.path.length-1);
+        var b = document.createElement("button");
+        b.type="button"; b.className="crumb"+(isCur?" cur":"");
+        b.textContent = crec.fmt;
+        b.title = crec.fmt+" "+crec.name;
+        if(!isCur){ b.dataset.act="open-code"; b.dataset.val=crec.code; }
+        cr.appendChild(b);
+        if(i<r.path.length-1){
+          var sep=document.createElement("span"); sep.className="crumb-sep"; sep.textContent="→";
+          cr.appendChild(sep);
+        }
+      }
+      card.appendChild(cr);
+    }
+
+    // дети / примечание о листе
+    if(r.children && r.children.length){
+      var cl = document.createElement("div"); cl.className="child-list";
+      var lbl = document.createElement("span"); lbl.className="cl-lbl";
+      lbl.textContent = "Дочерние элементы ("+r.children.length+"):";
+      cl.appendChild(lbl);
+      var ul = document.createElement("ul");
+      r.children.forEach(function(ccode){
+        var crec = BY_CODE[ccode]; if(!crec) return;
+        var li2 = document.createElement("li"); li2.className="child-item";
+        var cb = document.createElement("button"); cb.type="button"; cb.className="ci-code";
+        cb.textContent = crec.fmt; cb.title="Открыть: "+crec.fmt+" "+crec.name;
+        cb.dataset.act="open-code"; cb.dataset.val=crec.code;
+        var cn = document.createElement("span"); cn.innerHTML = hlText(crec.name, terms);
+        li2.appendChild(cb); li2.appendChild(cn);
+        ul.appendChild(li2);
+      });
+      cl.appendChild(ul);
+      card.appendChild(cl);
+    }else{
+      var ln = document.createElement("div"); ln.className="leaf-note";
+      ln.textContent = "✓ Конечная организационно-правовая форма";
+      card.appendChild(ln);
+    }
+
+    li.appendChild(card);
+    return li;
+  }
+
+  // ---------- рендер дерева ----------
+  function renderTree(){
+    if(!TREE.length){ elTreeView.innerHTML = '<div class="empty">Нет данных для дерева.</div>'; return; }
+    elTreeView.innerHTML = "";
+    elTreeView.appendChild(buildTreeUl(TREE, true));
+  }
+  function buildTreeUl(nodes, top){
+    var ul = document.createElement("ul");
+    if(!top) ul.className="";
+    nodes.forEach(function(nd){
+      var li = document.createElement("li");
+      var st = LVL_STYLE[nd.level] || {};
+      var det = document.createElement("details");
+      if(nd.level<=2) det.open = true;
+
+      var sum = document.createElement("summary");
+      sum.style.setProperty("--lvl", st.c||"var(--accent)");
+      sum.style.setProperty("--lvl-bg", st.bg||"var(--accent-weak)");
+      sum.style.setProperty("--lvl-fg", st.fg||"var(--accent-text)");
+
+      if(nd.children && nd.children.length){
+        var tw = document.createElement("span"); tw.className="tw"; sum.appendChild(tw);
+      }else{
+        var ld = document.createElement("span"); ld.className="leaf-dot"; ld.textContent="•"; sum.appendChild(ld);
+      }
+
+      var tc = document.createElement("button"); tc.type="button"; tc.className="tcode";
+      tc.textContent = nd.fmt; tc.title = "Открыть карточку: "+nd.fmt+" "+nd.name;
+      tc.dataset.act="open-code"; tc.dataset.val=nd.code;
+      sum.appendChild(tc);
+
+      var tn = document.createElement("button"); tn.type="button"; tn.className="tname";
+      tn.textContent = nd.name; tn.title = "Открыть карточку: "+nd.fmt+" "+nd.name;
+      tn.dataset.act="open-code"; tn.dataset.val=nd.code;
+      sum.appendChild(tn);
+
+      var tb = document.createElement("span");
+      tb.className = "tbadge"+(isLeafNode(nd)?" leaf":"");
+      tb.textContent = isLeafNode(nd) ? "форма" : ("ур."+nd.level);
+      sum.appendChild(tb);
+
+      det.appendChild(sum);
+      if(nd.children && nd.children.length){
+        det.appendChild(buildTreeUl(nd.children, false));
+      }
+      li.appendChild(det);
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+  function isLeafNode(nd){ return nd.isLeaf==="1"; }
+
+  // ---------- навигация / режимы ----------
+  function openCode(code){
+    setView("list");
+    elQ.value = code;            // точный нормализованный код -> score 100 -> первая карточка
+    syncClear();
+    applyFilters();
+    syncUrl();
+    focusTop();
+  }
+  function setView(v){
+    view = v;
+    var isTree = (v==="tree");
+    elTabList.setAttribute("aria-selected", isTree?"false":"true");
+    elTabTree.setAttribute("aria-selected", isTree?"true":"false");
+    elListView.style.display = isTree?"none":"";
+    elTreeView.style.display = isTree?"block":"none";
+    elPanel.classList.toggle("tree-mode", isTree);
+    if(isTree) renderTree();
+  }
+
+  // ---------- URL ----------
+  function parseUrlAndApply(){
+    var sp = new URLSearchParams(location.search);
+    var q = sp.get("q")||"";
+    var v = sp.get("view")||"list";
+    var lvl = sp.get("lvl");
+    var leaf = sp.get("leaf");
+    var sect = sp.get("section")||"";
+
+    elQ.value = q; syncClear();
+    if(lvl!=null && lvl!==""){ setLevels(lvl.split(",").filter(Boolean)); }
+    else { setLevels(LEVELS); }
+    elOnly.checked = (leaf==="1");
+    elSection.value = sect && ROOTS.indexOf(sect)>=0 ? sect : "";
+    setView(v==="tree"?"tree":"list");
+    applyFilters();
+  }
+  function syncUrl(){
+    var sp = new URLSearchParams();
+    if(view==="tree") sp.set("view","tree");
+    var q = elQ.value.trim(); if(q) sp.set("q", q);
+    var sel = selectedLevels();
+    if(sel.length!==LEVELS.length) sp.set("lvl", sel.join(","));
+    if(elOnly.checked) sp.set("leaf","1");
+    if(elSection.value) sp.set("section", elSection.value);
+    var qs = sp.toString();
+    var url = location.pathname + (qs?("?"+qs):"");
+    try{ history.replaceState(null,"",url); }catch(e){}
+  }
+
+  // ---------- копирование + тост ----------
+  var toastTimer=null;
+  function toast(msg){
+    elToast.textContent = msg;
+    elToast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ elToast.classList.remove("show"); }, 1600);
+  }
+  function copyText(text, label){
+    var done=function(){ toast(label); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
+    }else{ fallbackCopy(text); done(); }
+  }
+  function fallbackCopy(text){
+    var ta=document.createElement("textarea");
+    ta.value=text; ta.setAttribute("readonly",""); ta.style.position="absolute"; ta.style.left="-9999px";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  function onListClick(e){
+    var btn = e.target.closest("[data-act]");
+    if(!btn) return;
+    var act = btn.dataset.act, val = btn.dataset.val;
+    if(act==="copy-fmt") copyText(val, "Код "+val+" скопирован");
+    else if(act==="copy-full") copyText(val, "Скопировано: "+val);
+    else if(act==="open-code"){ e.stopPropagation(); openCode(val); }
+    else if(act==="search-alias"){ setView("list"); elQ.value=val; syncClear(); applyFilters(); syncUrl(); focusTop(); }
+    else if(act==="filter-section"){ setView("list"); elSection.value=val; applyFilters(); syncUrl(); focusTop(); }
+    else if(act==="filter-level"){
+      setView("list");
+      // оставляем только этот уровень
+      setLevels([val]);
+      applyFilters(); syncUrl(); focusTop();
+    }
+  }
+
+  // ---------- события ----------
+  function syncClear(){ elBox.classList.toggle("has-val", !!elQ.value); }
+  function focusTop(){ window.scrollTo({top:0,behavior:"smooth"}); }
+
+  var deb=null;
+  function onInput(){
+    syncClear();
+    if(view==="tree") setView("list");   // начали печатать — переходим в поиск
+    clearTimeout(deb);
+    deb=setTimeout(function(){ applyFilters(); syncUrl(); }, DEBOUNCE_MS);
+  }
+
+  elQ.addEventListener("input", onInput);
+  elQ.addEventListener("search", function(){ syncClear(); applyFilters(); syncUrl(); });
+  elClear.addEventListener("click", function(){ elQ.value=""; syncClear(); applyFilters(); syncUrl(); elQ.focus(); });
+  elSection.addEventListener("change", function(){ applyFilters(); syncUrl(); });
+  elOnly.addEventListener("change", function(){ applyFilters(); syncUrl(); });
+  elMore.addEventListener("click", function(){ shown += PAGE_SIZE; renderList(); });
+  elList.addEventListener("click", onListClick);
+  elTreeView.addEventListener("click", onListClick);
+
+  elTabList.addEventListener("click", function(){ setView("list"); syncUrl(); });
+  elTabTree.addEventListener("click", function(){ setView("tree"); syncUrl(); });
+
+  window.addEventListener("popstate", function(){ parseUrlAndApply(); });
+
+  function onScroll(){
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    var docH = document.documentElement.scrollHeight;
+    var winH = window.innerHeight;
+    elTop.style.display = (y>SCROLL_THRESHOLD) ? "block":"none";
+    elBottom.style.display = (y>SCROLL_THRESHOLD && (y+winH) < (docH-40)) ? "block":"none";
+  }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  window.addEventListener("resize", onScroll);
+  elTop.addEventListener("click", function(){ window.scrollTo({top:0,behavior:"smooth"}); });
+  elBottom.addEventListener("click", function(){ window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"}); });
+
+  syncClear();
+  loadAll();
+})();
+</script>
+</body>
+</html>
