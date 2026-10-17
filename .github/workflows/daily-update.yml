@@ -1,0 +1,99 @@
+name: Daily OKOPF Update
+
+on:
+  schedule:
+    - cron: '0 16 * * *'      # 16:00 UTC = 19:00 МСК (разнесено с ОКВЭД2 05:00 / ОКПД2 11:30 / ОКТМО 12:00 / ОКЕИ 13:00 / ОКАТО 14:00 / ОКОГУ 15:00)
+  workflow_dispatch:          # ручной запуск
+
+jobs:
+  sync-and-trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write         # встроенный токен Actions для коммита
+    env:
+      # API-токен Kaggle НОВОГО образца (CLI >= 1.8.0).
+      # В репозитории секрет называется KAGGLE_API_TOKEN_OKOPF, внутри него чистый токен.
+      # Kaggle CLI читает переменную окружения KAGGLE_API_TOKEN напрямую.
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN_OKOPF }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install Kaggle CLI с поддержкой API-токенов (>= 1.8.0)
+        run: |
+          pip install -q --upgrade kaggle
+          kaggle --version
+          python - <<'EOF'
+          import re, subprocess
+          out = subprocess.check_output(["kaggle", "--version"], text=True).strip()
+          m = re.search(r"(\d+)\.(\d+)", out)
+          assert m and tuple(map(int, m.groups())) >= (1, 8), \
+              f"нужен kaggle CLI >= 1.8.0 для API-токенов, получен: {out}"
+          print("OK: kaggle CLI поддерживает API-токены")
+          EOF
+
+      - name: Download latest kernel output
+        run: |
+          mkdir -p ./output
+          kaggle kernels output eavprog/okopf-classifier-downloader -p ./output
+          echo "Содержимое output:"
+          find ./output -maxdepth 4 -type f | head -30
+          echo ""
+          echo "--- Попытка показать лог/диагностику тетрадки (если есть) ---"
+          for f in ./output/*.log ./output/*.txt ./output/__notebook*.ipynb; do
+            [ -f "$f" ] && { echo ">>> $f (last 50 lines) >>>"; tail -n 50 "$f"; echo "<<< $f <<<"; echo ""; }
+          done || true
+
+      - name: Copy web files to repo root (не падает, ставит флаг)
+        id: copy
+        run: |
+          # ВАЖНО: тетрадка ОКОПФ пишет публикуемые артефакты В ПОДПАПКУ okopf_data/web
+          # (как ОКАТО/ОКТМО/ОКОГУ), а НЕ в корень /kaggle/working (как ОКЕИ).
+          # Поэтому SRC = ./output/okopf_data/web, а НЕ ./output.
+          # Это ровно те грабли, на которые наткнулся ОКЕИ v1.2, когда путь SRC
+          # скопировали из ОКТМО/ОКЕИ без адаптации и получили 4× MISSING.
+          SRC=./output/okopf_data/web
+          MISSING=0
+          for f in okopf.json okopf.json.gz okopf_meta.json okopf_meta.json.gz; do
+            if [ -f "$SRC/$f" ]; then
+              cp "$SRC/$f" "./$f"
+              echo "copied $f"
+            else
+              echo "::warning::MISSING $f в $SRC (тетрадка, вероятно, упала или писала не туда)"
+              MISSING=$((MISSING+1))
+            fi
+          done
+          if [ "$MISSING" -gt 0 ]; then
+            echo "❌ Отсутствует $MISSING из 4 файлов — коммит пропущен, сайт остаётся на последней хорошей версии"
+            echo "FILES_OK=false" >> "$GITHUB_ENV"
+          else
+            echo "✅ Все 4 файла на месте"
+            echo "FILES_OK=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Commit and push changes
+        if: env.FILES_OK == 'true'
+        run: |
+          git config --local user.email "github-actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add okopf.json okopf.json.gz okopf_meta.json okopf_meta.json.gz
+          if git diff --cached --quiet; then
+            echo "✅ Изменений нет — данные уже актуальны"
+          else
+            SOURCE_DATE=$(python -c "import json;print(json.load(open('okopf_meta.json')).get('source_date','?'))")
+            git commit -m "Auto-update: OKOPF data from kernel output (source $SOURCE_DATE) [skip ci]"
+            git push
+            echo "✅ Изменения запушены"
+          fi
+
+      - name: Trigger new notebook run (fire-and-forget, всегда)
+        if: always()
+        run: |
+          mkdir -p ./nb
+          kaggle kernels pull eavprog/okopf-classifier-downloader -p ./nb --metadata
+          kaggle kernels push -p ./nb
+          echo "✅ Тетрадка перезапущена (round-trip); workflow не ждёт её завершения"
