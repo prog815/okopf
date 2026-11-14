@@ -223,10 +223,6 @@
   .badge.sec.s6 { background:var(--s6); }
   .badge.sec.s7 { background:var(--s7); }
 
-  .badge.level { background:#f1f3f5; color:#3a4750; border-color:#e2e8e2; cursor:pointer; }
-  .badge.level:hover { filter:brightness(0.95); }
-  @media(prefers-color-scheme:dark){ .badge.level { background:rgba(255,255,255,.1); color:#cbd5e1; border-color:rgba(255,255,255,.15); } }
-
   .badge.short { background:#f2f4f2; color:#3a4750; border-color:#e2e8e2; cursor:pointer; transition: filter .15s; }
   .badge.short:hover { filter:brightness(0.95); }
   @media(prefers-color-scheme:dark){ .badge.short { background:rgba(255,255,255,.1); color:#cbd5e1; border-color:rgba(255,255,255,.15); } }
@@ -422,13 +418,6 @@
     "5": { short: "Деятельность граждан", full: "Организационно-правовые формы, создаваемые гражданами" },
     "6": { short: "Коммерч. унитарные", full: "Коммерческие унитарные организации" },
     "7": { short: "Некоммерч. унитарные", full: "Некоммерческие унитарные организации" }
-  };
-
-  var LEVEL_LABELS = {
-    "1": "Раздел",
-    "2": "Группа",
-    "3": "Подгруппа",
-    "4": "Форма"
   };
 
   var DEFAULT_PRIMARY_SOURCES = [
@@ -799,10 +788,6 @@
       badgesHtml += '<span class="badge sec s' + r.sec + ' clickable" data-sec="' + r.sec + '" title="Показать только раздел: ' + esc(sec.full) + '">§' + r.sec + ' ' + esc(sec.short) + '</span>';
     }
 
-    // Бейдж уровня
-    var lvlName = LEVEL_LABELS[r.lvl] || ('Уровень ' + r.lvl);
-    badgesHtml += '<span class="badge level clickable" data-level="' + r.lvl + '" title="Показать только уровень ' + r.lvl + '">Ур.' + r.lvl + ' ' + esc(lvlName) + '</span>';
-
     // Бейдж сокращения
     var shortBadgeHtml = '';
     if (r.aliasParts && r.aliasParts.length) {
@@ -969,24 +954,6 @@
       history.replaceState(null, '', url.toString());
       runSearch();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    var badgeLevel = target.closest('.badge.level');
-    if (badgeLevel) {
-      var lvl = badgeLevel.getAttribute('data-level');
-      els.q.value = ''; // Сбрасываем поиск, чтобы фильтр по уровню был наглядным
-      activeDeepLinkCode = null;
-      
-      var query = DATA.filter(function(r){ return r.lvl === lvl; });
-      view.list = query;
-      view.shown = 0;
-      els.results.innerHTML = '';
-      renderCount();
-      renderMore();
-      appendPage();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      showToast('Показаны записи уровня ' + lvl);
       return;
     }
 
